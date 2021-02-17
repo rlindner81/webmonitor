@@ -6,7 +6,7 @@
     "webmonitor": "bin/daemon.js"
   },
   "scripts": {
-    "start": "cd temp && nohup node src/webmonitor.js >webmonitor.txt 2>&1 &"
+    "start": "cd temp && node ../bin/daemon.js"
   },
   "keywords": [],
   "author": "",
