@@ -1,0 +1,17 @@
+{
+  "name": "webmonitor",
+  "version": "1.0.0",
+  "description": "play a sound when a change is detected on a website",
+  "bin": {
+    "webmonitor": "bin/daemon.js"
+  },
+  "scripts": {
+    "start": "cd temp && nohup node src/webmonitor.js >webmonitor.txt 2>&1 &"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
