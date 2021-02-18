@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "play a sound when a change is detected on a website",
   "scripts": {
-    "start": "cd temp && node ../bin/daemon.js",
+    "start": "cd temp && WEBMONITOR_HEADLESS=true node ../bin/daemon.js",
     "lint": "npm run eslint && npm run prettier",
     "eslint": "eslint . --fix",
     "prettier": "prettier \"**/*.{js,json,md,yml,yaml}\" --write --loglevel error"

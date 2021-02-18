@@ -4,10 +4,10 @@ const crypto = require("crypto");
 const childProcess = require("child_process");
 const fs = require("fs");
 const { promisify } = require("util");
-const yaml = require('js-yaml');
+const yaml = require("js-yaml");
 
 const fetch = require("./fetch");
-const { createDriver, amazonCheck } = require("./webdriver");
+const webdriver = require("./webdriver");
 
 const FREQUENCY_MILLISECONDS = 30000;
 const WEBSITES_FILE = `${process.cwd()}/websites.yaml`;
@@ -45,7 +45,10 @@ const _cleanResponse = async (driver, url, hostname) => {
       return spans.join("\n");
     }
     case "www.amazon.de": {
-      return amazonCheck(driver, url);
+      return webdriver.amazonCheck(driver, url);
+    }
+    case "www.euronics.de": {
+      return webdriver.euronicsCheck(driver, url);
     }
     default: {
       throw new Error(`unknown hostname ${hostname}`);
@@ -54,18 +57,21 @@ const _cleanResponse = async (driver, url, hostname) => {
 };
 
 (async () => {
-  const driver = await createDriver();
-  const driverCleanup = async () => {
-    await driver.quit();
+  let drivers = [];
+  const driversCleanup = async () => {
+    await Promise.all(drivers.map((driver) => driver.quit()));
     process.exit(0);
   };
-  process.on("SIGINT", driverCleanup);
-  process.on("SIGTERM", driverCleanup);
+  process.on("SIGINT", driversCleanup);
+  process.on("SIGTERM", driversCleanup);
 
-  const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, 'utf8'));
+  const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, "utf8"));
 
   await Promise.race(
     websites.map(async ({ url, hash, alarm }) => {
+      const driver = await webdriver.createDriver();
+      drivers.push(driver);
+
       const checkUrl = async () => {
         try {
           const now = new Date();
@@ -97,5 +103,5 @@ const _cleanResponse = async (driver, url, hostname) => {
     })
   );
 
-  await driverCleanup();
+  await driversCleanup();
 })();

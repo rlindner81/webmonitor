@@ -8,8 +8,15 @@ const screen = {
   height: 1080,
 };
 
+const headless = /true/gi.test(process.env.WEBMONITOR_HEADLESS);
+
 const createDriver = async () =>
-  new Builder().forBrowser("chrome").setChromeOptions(new chrome.Options().headless().windowSize(screen)).build();
+  new Builder()
+    .forBrowser("chrome")
+    .setChromeOptions(
+      headless ? new chrome.Options().headless().windowSize(screen) : new chrome.Options().windowSize(screen)
+    )
+    .build();
 
 const amazonCheck = async (driver, url) => {
   await driver.get(url);
@@ -26,7 +33,19 @@ const amazonCheck = async (driver, url) => {
   return availability;
 };
 
+const euronicsCheck = async (driver, url) => {
+  await driver.get(url);
+  await driver.findElement(By.css("button#onetrust-accept-btn-handler")).click();
+  try {
+    const alert = await driver.findElement(By.css("div.alert--content > span")).getText();
+    return alert;
+  } catch (err) {
+    return "manual check";
+  }
+};
+
 module.exports = {
   createDriver,
   amazonCheck,
+  euronicsCheck,
 };
