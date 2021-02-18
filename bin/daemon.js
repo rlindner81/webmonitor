@@ -21,14 +21,20 @@ const _kill = (pid) => {
 };
 
 (async () => {
+  const args = process.argv.slice(2);
+  const [firstArg] = args;
   try {
     const pid = parseFloat((await readFile(PID_FILE)).toString());
     _kill(pid);
     // eslint-disable-next-line no-empty
   } catch (err) {}
 
+  if (/(?:stop|kill)/gi.test(firstArg)) {
+    return;
+  }
+
   const foutlog = await open(LOG_FILE, "w");
-  const child = spawn(process.execPath, [SCRIPT_FILE].concat(process.argv.slice(2)), {
+  const child = spawn(process.execPath, [SCRIPT_FILE].concat(args), {
     stdio: ["ignore", foutlog, foutlog],
     detached: true,
   });

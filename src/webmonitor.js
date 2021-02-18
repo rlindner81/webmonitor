@@ -4,13 +4,13 @@ const crypto = require("crypto");
 const childProcess = require("child_process");
 const fs = require("fs");
 const { promisify } = require("util");
+const yaml = require('js-yaml');
 
 const fetch = require("./fetch");
 const { createDriver, amazonCheck } = require("./webdriver");
 
 const FREQUENCY_MILLISECONDS = 30000;
-const WEBSITES_FILE = `${process.cwd()}/websites.json`;
-const websites = require(WEBSITES_FILE);
+const WEBSITES_FILE = `${process.cwd()}/websites.yaml`;
 
 const sleep = promisify(setTimeout);
 const computeHash = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
@@ -61,6 +61,8 @@ const _cleanResponse = async (driver, url, hostname) => {
   };
   process.on("SIGINT", driverCleanup);
   process.on("SIGTERM", driverCleanup);
+
+  const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, 'utf8'));
 
   await Promise.race(
     websites.map(async ({ url, hash, alarm }) => {
