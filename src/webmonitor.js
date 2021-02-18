@@ -24,29 +24,39 @@ const _run = (file, ...args) => {
   });
 };
 
+const _cleanResponse = async (hostname, responseText) => {
+  switch (hostname) {
+    case "www.gameswirtschaft.de": {
+      const paragraphs = [];
+      responseText.replace(/<div class="comments" id="comments">[\s\S]*$/gi, "").replace(/<p>.*?<\/p>/gi, (result) => {
+        paragraphs.push(result);
+      });
+      return paragraphs.join("\n");
+    }
+    default: {
+      throw new Error(`unknown hostname ${hostname}`);
+    }
+  }
+};
+
 (async () =>
   Promise.all(
     websites.map(async ({ url, hash }) => {
       const checkUrl = async () => {
+        const now = new Date();
         const response = await fetch({ url, logged: false });
         const responseText = await response.text();
+        const { hostname } = new URL(url);
 
-        const paragraphs = [];
-        responseText
-          .replace(/<div class="comments" id="comments">[\s\S]*$/gi, "")
-          .replace(/<p>.*?<\/p>/gi, (result) => {
-            paragraphs.push(result);
-          });
-        const cleanText = paragraphs.join("\n");
+        const cleanText = await _cleanResponse(hostname, responseText);
         const currentHash = computeHash(cleanText);
 
         if (currentHash !== hash) {
-          const now = new Date();
           console.log(`!!! ${now.toISOString()} ${url} changed to ${currentHash}`);
-          const { hostname } = new URL(url);
           const filename =
             [now.toISOString().replace(/\W/g, "-"), hostname.replace(/\W/g, "_"), currentHash].join(" ") + ".html";
           fs.writeFileSync(filename, cleanText);
+
           _run("afplay", ALARM_MP3_FILE);
           return false;
         }
