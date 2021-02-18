@@ -9,7 +9,6 @@ const fetch = require("./fetch");
 
 const FREQUENCY_MILLISECONDS = 30000;
 const WEBSITES_FILE = `${process.cwd()}/websites.json`;
-const ALARM_MP3_FILE = `${__dirname}/../data/alarm.mp3`;
 const websites = require(WEBSITES_FILE);
 
 const sleep = promisify(setTimeout);
@@ -33,6 +32,15 @@ const _cleanResponse = async (hostname, responseText) => {
       });
       return paragraphs.join("\n");
     }
+    case "www.alternate.de": {
+      const spans = [];
+      responseText
+        .replace(/<div class="comments" id="comments">[\s\S]*$/gi, "")
+        .replace(/<span.*?<\/span>/gi, (result) => {
+          spans.push(result);
+        });
+      return spans.join("\n");
+    }
     default: {
       throw new Error(`unknown hostname ${hostname}`);
     }
@@ -41,7 +49,7 @@ const _cleanResponse = async (hostname, responseText) => {
 
 (async () =>
   Promise.all(
-    websites.map(async ({ url, hash }) => {
+    websites.map(async ({ url, hash, alarm }) => {
       const checkUrl = async () => {
         const now = new Date();
         const response = await fetch({ url, logged: false });
@@ -57,7 +65,8 @@ const _cleanResponse = async (hostname, responseText) => {
             [now.toISOString().replace(/\W/g, "-"), hostname.replace(/\W/g, "_"), currentHash].join(" ") + ".html";
           fs.writeFileSync(filename, cleanText);
 
-          _run("afplay", ALARM_MP3_FILE);
+          const alarmFile = `${__dirname}/../data/${alarm ? alarm.replace(/\W/g, "-") : "alarm"}.mp3`;
+          _run("afplay", alarmFile);
           return false;
         }
         console.log(`${new Date().toISOString()} ${url} unchanged`);
