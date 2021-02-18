@@ -13,11 +13,11 @@ const createDriver = async () =>
 
 const amazonCheck = async (driver, url) => {
   await driver.get(url);
-  await driver.findElement(By.id("a-autoid-16-announce")).click();
+  await driver.findElement(By.css("#edition_5 button")).click();
   await driver.wait(async () => {
     const productTitle = await driver.findElement(By.id("productTitle")).getText();
     return productTitle === "Sony PlayStation 5";
-  }, 5000);
+  }, 15000);
 
   const availability = await driver.findElement(By.id("availability")).getText();
   if (availability === "Erhältlich bei diesen Anbietern.") {
