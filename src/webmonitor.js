@@ -68,9 +68,9 @@ const _cleanResponse = async (driver, url, hostname) => {
   const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, "utf8"));
 
   await Promise.race(
-    websites.map(async ({ url, hash, alarm }) => {
-      const driver = await webdriver.createDriver();
-      drivers.push(driver);
+    websites.map(async ({ url, hash, alarm, needsDriver }) => {
+      const driver = needsDriver ? await webdriver.createDriver() : null;
+      needsDriver && drivers.push(driver);
 
       const checkUrl = async () => {
         try {

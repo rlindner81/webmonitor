@@ -35,7 +35,9 @@ const amazonCheck = async (driver, url) => {
 
 const euronicsCheck = async (driver, url) => {
   await driver.get(url);
-  await driver.findElement(By.css("button#onetrust-accept-btn-handler")).click();
+  try {
+    await driver.findElement(By.css("button#onetrust-accept-btn-handler")).click();
+  } catch (err) {} // eslint-disable-line no-empty
   try {
     const alert = await driver.findElement(By.css("div.alert--content > span")).getText();
     return alert;
