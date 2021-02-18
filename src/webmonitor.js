@@ -61,7 +61,7 @@ const _cleanResponse = async (driver, url, hostname) => {
   process.on("SIGINT", driverCleanup);
   process.on("SIGTERM", driverCleanup);
 
-  await Promise.all(
+  await Promise.race(
     websites.map(async ({ url, hash, alarm }) => {
       const checkUrl = async () => {
         try {
