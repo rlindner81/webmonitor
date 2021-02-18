@@ -19,7 +19,11 @@ const amazonCheck = async (driver, url) => {
     return productTitle === "Sony PlayStation 5";
   }, 5000);
 
-  return driver.findElement(By.id("availability")).getText();
+  const availability = await driver.findElement(By.id("availability")).getText();
+  if (availability === "Erhältlich bei diesen Anbietern.") {
+    throw new Error("Erhältlich bei diesen Anbietern.");
+  }
+  return availability;
 };
 
 module.exports = {

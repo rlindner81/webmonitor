@@ -57,6 +57,7 @@ const _cleanResponse = async (driver, url, hostname) => {
   const driver = await createDriver();
   const driverCleanup = async () => {
     await driver.quit();
+    process.exit(0);
   };
   process.on("SIGINT", driverCleanup);
   process.on("SIGTERM", driverCleanup);
