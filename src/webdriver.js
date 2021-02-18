@@ -20,11 +20,15 @@ const createDriver = async () =>
 
 const amazonCheck = async (driver, url) => {
   await driver.get(url);
+  const [cookieButton] = await driver.findElements(By.css("input#sp-cc-accept"));
+  cookieButton && cookieButton.click();
+
   await driver.findElement(By.css("#edition_5 button")).click();
   await driver.wait(async () => {
     const productTitle = await driver.findElement(By.id("productTitle")).getText();
-    return productTitle === "Sony PlayStation 5";
-  }, 15000);
+    const selection = await driver.findElement(By.css("span.selection")).getText();
+    return selection === "PS5" && productTitle === "Sony PlayStation 5";
+  }, 30000);
 
   const availability = await driver.findElement(By.id("availability")).getText();
   if (availability === "Erhältlich bei diesen Anbietern.") {
