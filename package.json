@@ -2,16 +2,21 @@
   "name": "webmonitor",
   "version": "1.0.0",
   "description": "play a sound when a change is detected on a website",
-  "bin": {
-    "webmonitor": "bin/daemon.js"
-  },
   "scripts": {
-    "start": "cd temp && node ../bin/daemon.js"
+    "start": "cd temp && node ../bin/daemon.js",
+    "lint": "npm run eslint && npm run prettier",
+    "eslint": "eslint . --fix",
+    "prettier": "prettier \"**/*.{js,json,md,yml,yaml}\" --write --loglevel error"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.12.0",
+    "eslint-config-prettier": "^7.2.0",
+    "prettier": "^2.1.2"
   }
 }

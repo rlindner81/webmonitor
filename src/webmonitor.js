@@ -3,14 +3,16 @@
 const crypto = require("crypto");
 const childProcess = require("child_process");
 const fs = require("fs");
+const { promisify } = require("util");
 
 const fetch = require("./fetch");
 
 const FREQUENCY_MILLISECONDS = 30000;
-const WEBSITES_FILE = `${__dirname}/../data/websites.json`;
+const WEBSITES_FILE = `${process.cwd()}/websites.json`;
 const ALARM_MP3_FILE = `${__dirname}/../data/alarm.mp3`;
 const websites = require(WEBSITES_FILE);
 
+const sleep = promisify(setTimeout);
 const computeHash = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
 
 const _run = (file, ...args) => {
@@ -24,10 +26,8 @@ const _run = (file, ...args) => {
 
 (async () =>
   Promise.all(
-    websites.map(async website => {
-      let timer = null;
-
-      const checkUrl = async ({ url, hash }) => {
+    websites.map(async ({ url, hash }) => {
+      const checkUrl = async () => {
         const response = await fetch({ url, logged: false });
         const responseText = await response.text();
 
@@ -43,16 +43,19 @@ const _run = (file, ...args) => {
         if (currentHash !== hash) {
           const now = new Date();
           console.log(`!!! ${now.toISOString()} ${url} changed to ${currentHash}`);
-          fs.writeFileSync(`${now.toISOString().replace(/\W/g,"-")} ${currentHash}.html`, cleanText);
+          const { hostname } = new URL(url);
+          const filename =
+            [now.toISOString().replace(/\W/g, "-"), hostname.replace(/\W/g, "_"), currentHash].join(" ") + ".html";
+          fs.writeFileSync(filename, cleanText);
           _run("afplay", ALARM_MP3_FILE);
-          clearInterval(timer);
-          return;
+          return false;
         }
         console.log(`${new Date().toISOString()} ${url} unchanged`);
+        return true;
       };
 
-      await checkUrl(website);
-      timer = setInterval(() => checkUrl(website), FREQUENCY_MILLISECONDS);
+      while (await checkUrl()) {
+        await sleep(FREQUENCY_MILLISECONDS);
+      }
     })
-  )
-)();
+  ))();
