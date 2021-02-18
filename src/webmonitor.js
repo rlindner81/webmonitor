@@ -27,7 +27,7 @@ const _cleanResponse = async (hostname, responseText) => {
   switch (hostname) {
     case "www.gameswirtschaft.de": {
       const paragraphs = [];
-      responseText.replace(/<div class="comments" id="comments">[\s\S]*$/gi, "").replace(/<p>.*?<\/p>/gi, (result) => {
+      responseText.replace(/<div class="comments" id="comments">[\s\S]*$/gi, "").replace(/<p.*?<\/p>/gi, (result) => {
         paragraphs.push(result);
       });
       return paragraphs.join("\n");
@@ -35,12 +35,19 @@ const _cleanResponse = async (hostname, responseText) => {
     case "www.alternate.de": {
       const spans = [];
       responseText
-        .replace(/<div class="comments" id="comments">[\s\S]*$/gi, "")
         .replace(/<span.*?<\/span>/gi, (result) => {
           spans.push(result);
         });
       return spans.join("\n");
     }
+    // case "www.saturn.de": {
+    //   const matchText = "Dieser Artikel ist aktuell nicht verfügbar.";
+    //   return responseText.includes(matchText) ? matchText : responseText;
+    // }
+    // case "www.euronics.de": {
+    //   const matchText = "+++ Leider ist das gewünschte Produkt bereits vergriffen +++";
+    //   return responseText.includes(matchText) ? matchText : responseText;
+    // }
     default: {
       throw new Error(`unknown hostname ${hostname}`);
     }
