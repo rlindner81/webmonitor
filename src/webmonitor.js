@@ -6,6 +6,7 @@ const fs = require("fs");
 const { promisify } = require("util");
 
 const fetch = require("./fetch");
+const { amazonCheck } = require("./webdriver");
 
 const FREQUENCY_MILLISECONDS = 30000;
 const WEBSITES_FILE = `${process.cwd()}/websites.json`;
@@ -23,9 +24,11 @@ const _run = (file, ...args) => {
   });
 };
 
-const _cleanResponse = async (hostname, responseText) => {
+const _cleanResponse = async (url, hostname) => {
   switch (hostname) {
     case "www.gameswirtschaft.de": {
+      const response = await fetch({ url, logged: false });
+      const responseText = await response.text();
       const paragraphs = [];
       responseText.replace(/<div class="comments" id="comments">[\s\S]*$/gi, "").replace(/<p.*?<\/p>/gi, (result) => {
         paragraphs.push(result);
@@ -33,21 +36,17 @@ const _cleanResponse = async (hostname, responseText) => {
       return paragraphs.join("\n");
     }
     case "www.alternate.de": {
+      const response = await fetch({ url, logged: false });
+      const responseText = await response.text();
       const spans = [];
-      responseText
-        .replace(/<span.*?<\/span>/gi, (result) => {
-          spans.push(result);
-        });
+      responseText.replace(/<span.*?<\/span>/gi, (result) => {
+        spans.push(result);
+      });
       return spans.join("\n");
     }
-    // case "www.saturn.de": {
-    //   const matchText = "Dieser Artikel ist aktuell nicht verfügbar.";
-    //   return responseText.includes(matchText) ? matchText : responseText;
-    // }
-    // case "www.euronics.de": {
-    //   const matchText = "+++ Leider ist das gewünschte Produkt bereits vergriffen +++";
-    //   return responseText.includes(matchText) ? matchText : responseText;
-    // }
+    case "www.amazon.de": {
+      return amazonCheck(url);
+    }
     default: {
       throw new Error(`unknown hostname ${hostname}`);
     }
@@ -59,11 +58,9 @@ const _cleanResponse = async (hostname, responseText) => {
     websites.map(async ({ url, hash, alarm }) => {
       const checkUrl = async () => {
         const now = new Date();
-        const response = await fetch({ url, logged: false });
-        const responseText = await response.text();
         const { hostname } = new URL(url);
 
-        const cleanText = await _cleanResponse(hostname, responseText);
+        const cleanText = await _cleanResponse(url, hostname);
         const currentHash = computeHash(cleanText);
 
         if (currentHash !== hash) {
