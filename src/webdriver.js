@@ -8,27 +8,21 @@ const screen = {
   height: 1080,
 };
 
-const amazonCheck = async (url) => {
-  let driver = await new Builder()
-    .forBrowser("chrome")
-    .setChromeOptions(new chrome.Options().headless().windowSize(screen))
-    .build();
-  let availability = "";
-  try {
-    await driver.get(url);
-    await driver.findElement(By.id("a-autoid-16-announce")).click();
-    await driver.wait(async () => {
-      const productTitle = await driver.findElement(By.id("productTitle")).getText();
-      return productTitle === "Sony PlayStation 5";
-    }, 5000);
+const createDriver = async () =>
+  new Builder().forBrowser("chrome").setChromeOptions(new chrome.Options().headless().windowSize(screen)).build();
 
-    availability = await driver.findElement(By.id("availability")).getText();
-  } finally {
-    await driver.quit();
-  }
-  return availability;
+const amazonCheck = async (driver, url) => {
+  await driver.get(url);
+  await driver.findElement(By.id("a-autoid-16-announce")).click();
+  await driver.wait(async () => {
+    const productTitle = await driver.findElement(By.id("productTitle")).getText();
+    return productTitle === "Sony PlayStation 5";
+  }, 5000);
+
+  return driver.findElement(By.id("availability")).getText();
 };
 
 module.exports = {
+  createDriver,
   amazonCheck,
 };
