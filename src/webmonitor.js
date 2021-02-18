@@ -55,40 +55,44 @@ const _cleanResponse = async (driver, url, hostname) => {
 
 (async () => {
   const driver = await createDriver();
-  try {
-    await Promise.all(
-      websites.map(async ({ url, hash, alarm }) => {
-        const checkUrl = async () => {
-          try {
-            const now = new Date();
-            const { hostname } = new URL(url);
-
-            const cleanText = await _cleanResponse(driver, url, hostname);
-            const currentHash = computeHash(cleanText);
-
-            if (currentHash !== hash) {
-              console.log(`!!! ${now.toISOString()} ${url} changed to ${currentHash}`);
-              const filename =
-                [now.toISOString().replace(/\W/g, "-"), hostname.replace(/\W/g, "_"), currentHash].join(" ") + ".html";
-              fs.writeFileSync(filename, cleanText);
-
-              const alarmFile = `${__dirname}/../data/${alarm ? alarm.replace(/\W/g, "-") : "alarm"}.mp3`;
-              _run("afplay", alarmFile);
-              return false;
-            }
-          } catch (err) {
-            console.error(err.stack || err.message);
-          }
-          console.log(`${new Date().toISOString()} ${url} unchanged`);
-          return true;
-        };
-
-        while (await checkUrl()) {
-          await sleep(FREQUENCY_MILLISECONDS);
-        }
-      })
-    );
-  } finally {
+  const driverCleanup = async () => {
     await driver.quit();
-  }
+  };
+  process.on("SIGINT", driverCleanup);
+  process.on("SIGTERM", driverCleanup);
+
+  await Promise.all(
+    websites.map(async ({ url, hash, alarm }) => {
+      const checkUrl = async () => {
+        try {
+          const now = new Date();
+          const { hostname } = new URL(url);
+
+          const cleanText = await _cleanResponse(driver, url, hostname);
+          const currentHash = computeHash(cleanText);
+
+          if (currentHash !== hash) {
+            console.log(`!!! ${now.toISOString()} ${url} changed to ${currentHash}`);
+            const filename =
+              [now.toISOString().replace(/\W/g, "-"), hostname.replace(/\W/g, "_"), currentHash].join(" ") + ".html";
+            fs.writeFileSync(filename, cleanText);
+
+            const alarmFile = `${__dirname}/../data/${alarm ? alarm.replace(/\W/g, "-") : "alarm"}.mp3`;
+            _run("afplay", alarmFile);
+            return false;
+          }
+        } catch (err) {
+          console.error(err.stack || err.message);
+        }
+        console.log(`${new Date().toISOString()} ${url} unchanged`);
+        return true;
+      };
+
+      while (await checkUrl()) {
+        await sleep(FREQUENCY_MILLISECONDS);
+      }
+    })
+  );
+
+  await driverCleanup();
 })();
