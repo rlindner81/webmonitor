@@ -32,6 +32,7 @@ const amazonCheck = async (driver, url) => {
     const selection = await driver.findElement(By.css("span.selection")).getText();
     return selection === "PS5" && productTitle === "Sony PlayStation 5";
   }, 30000);
+  await driver.sleep(1000);
 
   const availability = await driver.findElement(By.id("availability")).getText();
   if (availability === "Erhältlich bei diesen Anbietern.") {
