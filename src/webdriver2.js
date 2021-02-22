@@ -9,18 +9,18 @@ const screen = {
   height: 1080,
 };
 
-const createDriver = async () =>
-  new Builder().forBrowser("chrome").setChromeOptions(new chrome.Options().windowSize(screen)).build();
+const createDriver = async () => {
+  const driver = new Builder().forBrowser("chrome").setChromeOptions(new chrome.Options().windowSize(screen)).build();
+  await driver.manage().window().minimize();
+  return driver;
+};
 
 const urls = ["https://www.google.com", "https://www.amazon.com", "https://www.apple.com", "https://www.twitter.com"];
 
 const singleTest = async (index, driver, run) => {
   try {
     console.log("started instance %i run %i", index, run);
-    const size = { width: 320 * (run + 1), height: 200 * (run + 1) };
     const url = urls[index];
-    await driver.manage().window().setRect(size);
-    await driver.manage().window().minimize();
 
     await driver.get(url);
     if (index === 0 && run === 0) {

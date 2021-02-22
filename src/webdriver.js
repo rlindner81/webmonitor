@@ -10,13 +10,16 @@ const screen = {
 
 const headless = /true/gi.test(process.env.WEBMONITOR_HEADLESS);
 
-const createDriver = async () =>
-  new Builder()
+const createDriver = async () => {
+  const driver = new Builder()
     .forBrowser("chrome")
     .setChromeOptions(
       headless ? new chrome.Options().headless().windowSize(screen) : new chrome.Options().windowSize(screen)
     )
     .build();
+  !headless && await driver.manage().window().minimize();
+  return driver;
+};
 
 const amazonCheck = async (driver, url) => {
   await driver.get(url);
