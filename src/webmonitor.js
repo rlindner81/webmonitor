@@ -47,6 +47,9 @@ const _cleanResponse = async (driver, url, hostname) => {
     case "www.amazon.de": {
       return webdriver.amazonCheck(driver, url);
     }
+    case "www.mediamarkt.de": {
+      return webdriver.mediamarktCheck(driver, url);
+    }
     case "www.euronics.de": {
       return webdriver.euronicsCheck(driver, url);
     }

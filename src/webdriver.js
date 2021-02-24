@@ -41,6 +41,17 @@ const amazonCheck = async (driver, url) => {
   return availability;
 };
 
+const mediamarktCheck = async (driver, url) => {
+  await driver.get(url);
+  const [cookieButton] = await driver.findElements(By.css("#privacy-layer-accept-all-button"));
+  cookieButton && cookieButton.click();
+
+  const availabilityElements = await driver.findElements(By.css("[data-test='pdp-product-not-available']"))
+  const availabiltiyTexts = await Promise.all(availabilityElements.map((element) => element.getText()));
+
+  return JSON.stringify(availabiltiyTexts);
+};
+
 const euronicsCheck = async (driver, url) => {
   await driver.get(url);
   try {
@@ -57,5 +68,6 @@ const euronicsCheck = async (driver, url) => {
 module.exports = {
   createDriver,
   amazonCheck,
+  mediamarktCheck,
   euronicsCheck,
 };
