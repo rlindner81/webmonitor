@@ -60,7 +60,6 @@ const _cleanResponse = async (driver, url, hostname) => {
 };
 
 (async () => {
-  let drivers = [];
   const driversCleanup = async () => {
     await Promise.all(drivers.map((driver) => driver.quit()));
     process.exit(0);
@@ -70,10 +69,15 @@ const _cleanResponse = async (driver, url, hostname) => {
 
   const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, "utf8"));
 
+  const drivers = await Promise.all(
+    websites.map(async ({ needsDriver }) =>
+      needsDriver ? await webdriver.createDriver() : null
+    )
+  );
+
   await Promise.race(
-    websites.map(async ({ url, hash, alarm, needsDriver }) => {
-      const driver = needsDriver ? await webdriver.createDriver() : null;
-      needsDriver && drivers.push(driver);
+    websites.map(async ({ url, hash, alarm }, index) => {
+      const driver = drivers[index];
 
       const checkUrl = async () => {
         try {
@@ -90,7 +94,7 @@ const _cleanResponse = async (driver, url, hostname) => {
             fs.writeFileSync(filename, cleanText);
 
             const alarmFile = `${__dirname}/../data/${alarm ? alarm.replace(/\W/g, "-") : "alarm"}.mp3`;
-            _run("afplay", alarmFile);
+            _run("afplay", "-t", "2", alarmFile);
             return false;
           }
         } catch (err) {
