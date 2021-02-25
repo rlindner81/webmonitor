@@ -50,6 +50,12 @@ const _cleanResponse = async (driver, url, hostname) => {
     case "www.mediamarkt.de": {
       return webdriver.mediamarktCheck(driver, url);
     }
+    case "www.saturn.de": {
+      return webdriver.mediamarktCheck(driver, url);
+    }
+    case "ps5.expert.de": {
+      return webdriver.expertCheck(driver, url);
+    }
     case "www.euronics.de": {
       return webdriver.euronicsCheck(driver, url);
     }
@@ -60,24 +66,23 @@ const _cleanResponse = async (driver, url, hostname) => {
 };
 
 (async () => {
+  const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, "utf8"));
+
+  const drivers = await Promise.all(
+    websites.map(async ({ needsDriver }) => (needsDriver ? await webdriver.createDriver() : null))
+  );
+
   const driversCleanup = async () => {
-    await Promise.all(drivers.map((driver) => driver.quit()));
+    await Promise.all(drivers.filter((driver) => driver !== null).map((driver) => driver.quit()));
     process.exit(0);
   };
   process.on("SIGINT", driversCleanup);
   process.on("SIGTERM", driversCleanup);
 
-  const { websites } = yaml.load(fs.readFileSync(WEBSITES_FILE, "utf8"));
-
-  const drivers = await Promise.all(
-    websites.map(async ({ needsDriver }) =>
-      needsDriver ? await webdriver.createDriver() : null
-    )
-  );
-
   await Promise.race(
-    websites.map(async ({ url, hash, alarm }, index) => {
+    websites.map(async ({ url, alarm }, index) => {
       const driver = drivers[index];
+      let hash = null;
 
       const checkUrl = async () => {
         try {
@@ -86,6 +91,11 @@ const _cleanResponse = async (driver, url, hostname) => {
 
           const cleanText = await _cleanResponse(driver, url, hostname);
           const currentHash = computeHash(cleanText);
+          if (hash === null) {
+            hash = currentHash;
+            console.log(`${new Date().toISOString()} ${url} started polling`);
+            return true;
+          }
 
           if (currentHash !== hash) {
             console.log(`!!! ${now.toISOString()} ${url} changed to ${currentHash}`);

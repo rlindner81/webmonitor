@@ -17,7 +17,7 @@ const createDriver = async () => {
       headless ? new chrome.Options().headless().windowSize(screen) : new chrome.Options().windowSize(screen)
     )
     .build();
-  !headless && await driver.manage().window().minimize();
+  !headless && (await driver.manage().window().minimize());
   return driver;
 };
 
@@ -46,7 +46,20 @@ const mediamarktCheck = async (driver, url) => {
   const [cookieButton] = await driver.findElements(By.css("#privacy-layer-accept-all-button"));
   cookieButton && cookieButton.click();
 
-  const availabilityElements = await driver.findElements(By.css("[data-test='pdp-product-not-available']"))
+  const availabilityElements = await driver.findElements(By.css("[data-test='pdp-product-not-available']"));
+  const availabiltiyTexts = await Promise.all(availabilityElements.map((element) => element.getText()));
+
+  return JSON.stringify(availabiltiyTexts);
+};
+
+const expertCheck = async (driver, url) => {
+  await driver.get(url);
+  const [cookieButton] = await driver.findElements(By.css("button.widget-CookieLayer-setUserCookiePermissions"));
+  cookieButton && cookieButton.click();
+
+  const availabilityElements = await driver.findElements(
+    By.css("[data-widget-id='29c1137c-3d23-423a-9473-7e388ee8f7d1']")
+  );
   const availabiltiyTexts = await Promise.all(availabilityElements.map((element) => element.getText()));
 
   return JSON.stringify(availabiltiyTexts);
@@ -69,5 +82,6 @@ module.exports = {
   createDriver,
   amazonCheck,
   mediamarktCheck,
+  expertCheck,
   euronicsCheck,
 };

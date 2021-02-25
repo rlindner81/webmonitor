@@ -10,13 +10,6 @@ const webdriver = require("./webdriver2");
 const FREQUENCY_MILLISECONDS = 30000;
 const WEBSITES_FILE = `${process.cwd()}/websites.yaml`;
 
-const deciders = {
-  "www.gameswirtschaft.de": async (driver, url, state = {}) => {
-
-  }
-}
-
-
 const _cleanResponse = async (driver, url, hostname) => {
   switch (hostname) {
     case "www.gameswirtschaft.de": {
